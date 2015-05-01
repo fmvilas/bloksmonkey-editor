@@ -1,0 +1,8 @@
+*.swp
+*.swo
+*.DS_Store
+node_modules/*
+public/node_modules/*
+public/app/components/*
+dist
+build
