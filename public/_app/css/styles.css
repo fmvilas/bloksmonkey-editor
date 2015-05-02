@@ -1,0 +1,8 @@
+/* Common Styles */
+@import url('./common.css');
+
+/* Font Awesome */
+@import url('../app/components/font-awesome/css/font-awesome.css');
+
+/* Icons */
+@import url('./icons.css');

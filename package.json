@@ -5,10 +5,19 @@
   "scripts": {
     "start": "server.js"
   },
+  "dependencies": {
+    "jquery": "2.1.4",
+    "superagent": "1.2.0"
+  },
   "devDependencies": {
     "express": "4.10.1",
     "gulp": "3.8.11",
-    "gulp-nodemon": "1.0.5",
-    "http-proxy": "1.11.1"
+    "gulp-sourcemaps": "1.5.2",
+    "gulp-file-copy": "0.0.1",
+    "gulp-util": "3.0.4",
+    "gulp-webpack": "1.4.0",
+    "http-proxy": "1.11.1",
+    "jade-loader": "0.7.1",
+    "gulp-nodemon": "1.0.5"
   }
 }
