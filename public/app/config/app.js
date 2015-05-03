@@ -1,0 +1,9 @@
+window.config = {
+  "oauth": {
+    "redirect_uri": "http://localhost:9000/auth_app",
+    "client_id": "54de2af99fbafddbf40e822b"
+  },
+  "app": {
+    "host": "http://localhost:9000"
+  }
+};

@@ -1,0 +1,5 @@
+oauth:
+  redirect_uri: 'https://bloksmonkey.com/auth_app'
+  client_id: '54de2af99fbafddbf40e822b'
+app:
+  host: 'https://bloksmonkey.com'

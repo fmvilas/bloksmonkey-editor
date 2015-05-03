@@ -1,5 +1,8 @@
 var core = require('./core/core.js');
 var request = require('superagent');
+var url = require('url');
+var ls = require('local-storage');
+var config = window.config;
 
 // CHECK IF LOGGED IN
 //   - IF NOT, REDIRECT TO LOGIN AND START AGAIN
@@ -8,41 +11,64 @@ var request = require('superagent');
 // USE OAUTH_TOKEN TO RETRIEVE USER/BOOTSTRAP INFORMATION
 //   - IF UNAUTHORIZED (TOKEN EXPIRED) START OAUTH DANCE (SEE BELOW)
 
-var jqXHR = $.ajax({
-  url: core.urlFor('api.v1.oauth2.authorize'),
-  data: {
-    response_type: 'code',
-    client_id: '54de2af99fbafddbf40e822b',
-    redirect_uri: 'http://localhost:9000/app',
-    scope: 'user project project_files'
-  },
-  crossDomain: true,
-  accepts: 'application/json',
-  success: function(data) {
-    console.dir(data);
-  },
-  error: function() {
-    console.log('Error');
-    console.dir(arguments);
-  },
-  statusCode: {
-    401: function (data) {
-      if( data && data.responseJSON && data.responseJSON.code === 'not_logged_in' ) {
-        core.redirectTo('login');
-      }
-    }
-  },
-  complete: function () {
-    console.dir(jqXHR);
+function handleError (err, res) {
+  var error = res.unauthorized && res.body ? res.body.code : null;
+
+  switch(error) {
+    case 'not_logged_in':
+      core.redirectTo('login');
+      break;
+    case 'oauth2_token_expired':
+      ls.remove('oauth2_token');
+      window.location.reload();
+      break;
   }
+}
 
-});
+function requestToken () {
+  return request
+    .get(core.urlFor('api.v1.oauth2.authorize'))
+    .query({ response_type: 'code' })
+    .query({ client_id: config.oauth.client_id })
+    .query({ redirect_uri: config.oauth.redirect_uri })
+    .query({ scope: 'user project project_files' })
+    .set('Accept', 'application/json')
+    .end(function (err, res) {
+      if( err ) { return handleError(err, res); }
 
-// REQUEST ACCESS TOKEN
-// IT WILL REDIRECT IF NOT LOGGED IN - SO WE SHOULD PERFORM A REDIRECTION HERE
-//   * AFTER LOGIN IT WILL START AGAIN, BUT LOGGED IN
-// IT WILL RESPOND BACK WITH THE TOKEN
-// SAVE TOKEN ON LOCALSTORAGE FOR USING ON EVERY REQUEST
+      var responseURL = res.xhr.responseURL;
+      var res_url = url.parse(res.xhr.responseURL, true, true);
+      var token = res_url.query ? res_url.query.access_token : null;
+
+      if( res.ok && responseURL.match(new RegExp('^'+core.urlFor('root', true))) && token ) {
+        ls.set('oauth2_token', token);
+      }
+    });
+}
+
+function start (err, res) {
+  window.bootstrap_data = res.body;
+}
+
+function requestBootstrapData () {
+  return request
+    .get(core.urlFor('api.internal.bootstrap'))
+    .query({ access_token: ls.get('oauth2_token') })
+    .set('Accept', 'application/json')
+    .end(function (err, res) {
+      if( err ) { return handleError(err, res); }
+
+      start(err, res);
+    });
+}
+
+if( !ls.get('oauth2_token') ) {
+  requestToken().on('end', function () {
+    requestBootstrapData();
+  });
+} else {
+  requestBootstrapData();
+}
 
 // Constructs the Didgeridoo User Interface.
 /*require(['modules/main-menu/main'], function(MainMenu) {

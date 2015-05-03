@@ -1,6 +1,7 @@
 "use strict";
 
 var core = {};
+var config = window.config;
 
 core.createNS = function(ns) {
   if( typeof ns === 'string' ) {
@@ -155,17 +156,31 @@ core.redirectTo = function(where) {
  * Gets the corresponding url for a known resource.
  *
  * @param {string} resource The name of the resource.
+ * @param {string} [absolute] Whether url should be absolute or not.
  * @returns {string} The url for the resource.
  */
-core.urlFor = function(resource) {
+core.urlFor = function(resource, absolute) {
+  var url;
+
   switch(resource) {
+    case 'root':
+      url = '/app';
+      break;
     case 'login':
-      return '/login';
+      url = '/login';
+      break;
+    case 'api.internal.bootstrap':
+      url = '/api/internal/bootstrap';
       break;
     case 'api.v1.oauth2.authorize':
-      return '/api/v1/oauth2/authorize';
+      url = '/api/v1/oauth2/authorize';
+      break;
+    case 'auth_app':
+      url = '/auth_app';
       break;
   }
+
+  return absolute ? config.app.host + url : url;
 };
 
 module.exports = core;

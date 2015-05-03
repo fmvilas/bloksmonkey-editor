@@ -7,17 +7,23 @@
   },
   "dependencies": {
     "jquery": "2.1.4",
+    "local-storage": "1.4.2",
     "superagent": "1.2.0"
   },
   "devDependencies": {
     "express": "4.10.1",
     "gulp": "3.8.11",
+    "gulp-copy2": "0.2.0",
+    "gulp-nodemon": "2.0.3",
     "gulp-sourcemaps": "1.5.2",
-    "gulp-file-copy": "0.0.1",
     "gulp-util": "3.0.4",
     "gulp-webpack": "1.4.0",
+    "gulp-yaml": "0.2.4",
     "http-proxy": "1.11.1",
     "jade-loader": "0.7.1",
-    "gulp-nodemon": "1.0.5"
+    "json-loader": "0.5.1",
+    "node-notifier": "4.2.1",
+    "through2": "0.6.5",
+    "yaml-loader": "0.1.0"
   }
 }
