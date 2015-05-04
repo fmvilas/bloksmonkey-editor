@@ -1,5 +1,8 @@
 "use strict";
 
+var Backbone = require('backbone');
+var Mn = require('backbone.marionette');
+var app;
 var core = {};
 var config = window.config;
 
@@ -183,4 +186,12 @@ core.urlFor = function(resource, absolute) {
   return absolute ? config.app.host + url : url;
 };
 
-module.exports = core;
+app = new Mn.Application(core);
+
+app.on('start', function() {
+  Backbone.history.start();
+});
+
+app.start();
+
+module.exports = app;

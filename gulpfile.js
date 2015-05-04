@@ -23,6 +23,7 @@ gulp.task('static', function () {
     {src: 'src/index.html', dest: 'public/app/index.html'},
     {src: 'src/favicon.png', dest: 'public/app/favicon.png'},
     {src: 'src/icon_128.png', dest: 'public/app/icon_128.png'}
+    //{src: 'src/assets/**/*', dest: 'public/app/assets/'}
   ];
   return copy(paths);
 });

@@ -12,7 +12,7 @@ var config = window.config;
 //   - IF UNAUTHORIZED (TOKEN EXPIRED) START OAUTH DANCE (SEE BELOW)
 
 function handleError (err, res) {
-  var error = res.unauthorized && res.body ? res.body.code : null;
+  var error = res.body ? res.body.code : null;
 
   switch(error) {
     case 'not_logged_in':
@@ -47,7 +47,9 @@ function requestToken () {
 }
 
 function start (err, res) {
+  var Layout = require('./modules/layout/layout.js');
   window.bootstrap_data = res.body;
+  Layout.load();
 }
 
 function requestBootstrapData () {
