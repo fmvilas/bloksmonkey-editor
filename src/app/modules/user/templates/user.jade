@@ -1,0 +1,19 @@
+.js-wrapper
+  .user-menu-avatar
+    button.js-avatar.js-avatar-photo.user-menu-avatar-photo(type='button', data-toggle='dropdown', aria-haspopup='true', aria-expanded='false')
+    button.js-avatar.js-avatar-initials.user-menu-avatar-initials(type='button', data-toggle='dropdown', aria-haspopup='true', aria-expanded='false')
+
+    ul.dropdown-menu(role='menu')
+      li(role='presentation')
+        a(role='menuitem', tabindex=-1, href='#!/user/profile')
+          i.icon.fa.fa-user
+          span Profile
+      li(role='presentation')
+        a(role='menuitem', tabindex=-1, href='#!/user/settings')
+          i.icon.fa.fa-gear
+          span Settings
+      li.divider(role='presentation')
+      li(role='presentation')
+        a(role='menuitem', tabindex=-1, href='/logout')
+          i.text-danger.icon.fa.fa-sign-out
+          span.text-danger Log Out

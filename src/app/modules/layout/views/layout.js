@@ -1,6 +1,7 @@
 var Mn = require('backbone.marionette');
 var template = require('../templates/layout.jade');
 var Sidebar = require('../../sidebar/sidebar.js');
+var Welcome = require('../../welcome/welcome.js');
 var LayoutView;
 
 require('../styles/layout.less');
@@ -8,14 +9,15 @@ require('../styles/layout.less');
 LayoutView = {
   el: 'body',
   template: template,
-  regions: {
+  ui: {
     sidebar: '.js-layout-sidebar',
-    content: '.js-layout-content'
+    content: '#page-wrapper'
   }
 };
 
 LayoutView.onRender = function () {
-  Sidebar.load({ el: this.regions.sidebar });
+  Sidebar.load({ el: this.ui.sidebar });
+  Welcome.load({ el: this.ui.content });
   //var MainMenu = require('../modules/main-menu/main');
   //new MainMenu().renderTo( layout.northPanel );
 };

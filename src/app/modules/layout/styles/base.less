@@ -1,9 +1,6 @@
-@import "variables.less";
-@import "mixins.less";
-
 body {
   font-family: "open sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
-  background-color: #2f4050;
+  background-color: @background;
   font-size: 13px;
   color: @text-color;
   overflow-x: hidden;
@@ -12,7 +9,11 @@ body {
 
 html,body {
   height: 100%;
+}
 
+button {
+  font-family: "open sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-weight: 300;
 }
 
 body.full-height-layout #wrapper,
@@ -20,7 +21,8 @@ body.full-height-layout #page-wrapper {
   height: 100%;
 }
 
-#page-wrapper {
+#page-wrapper,
+#editor-wrapper {
   min-height: auto;
 }
 
@@ -184,18 +186,21 @@ video {
   padding: 20px 10px 40px;
 }
 
-#page-wrapper {
-  padding: 0 15px;
+#page-wrapper,
+#editor-wrapper {
+  display: none;
+  background-color: @background-light;
   min-height: 568px;
-  position: relative !important;
+  position: fixed;
+  overflow: auto;
+
+  &.active {
+    display: block;
+  }
 }
 
-@media (min-width: 768px) {
-  #page-wrapper {
-    position: inherit;
-    margin: 0 0 0 240px;
-    min-height: 1000px;
-  }
+#editor-wrapper {
+  background-color: white;
 }
 
 .title-action {
@@ -218,6 +223,14 @@ ul.unstyled, ol.unstyled {
   color: #e5e6e7;
 }
 
+.icon {
+  margin-right: 1em;
+
+  &.right {
+    margin-right: 0;
+    margin-left: 1em;
+  }
+}
 
 /* FOOTER */
 
@@ -1202,7 +1215,3 @@ a.close-canvas-menu:hover {
 // Bootstrap issue in 3.3.0 with modal https://github.com/twbs/bootstrap/issues/9855
 // Fix
 body.modal-open { padding-right:inherit !important; }
-
-@import "typography.less";
-@import "skins.less";
-@import "rtl.less";

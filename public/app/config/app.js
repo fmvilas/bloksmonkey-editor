@@ -5,5 +5,8 @@ window.config = {
   },
   "app": {
     "host": "http://localhost:9000"
+  },
+  "apps": {
+    "url": "http://localhost:9000/apps/"
   }
 };

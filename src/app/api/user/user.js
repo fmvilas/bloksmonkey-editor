@@ -1,74 +1,92 @@
-"use strict";
+var BloksMonkey = require('../../core/core');
+var assert = require('assert');
+var $ = require('jquery');
+var is = require('is_js');
+var ls = require('local-storage');
+var _ = require('underscore');
+var User = {};
+var UserStatic = {};
+
+function validateUserId (uid) {
+  return !!uid.match(/^[a-z0-9]{24}$/);
+}
+
+User.Model = require('../../models/user');
 
 /**
- * User API
+ * Returns user information.
  *
- * @module api/user/user
+ * @param {String} [user_id] The id of the user you want to retrieve information. Default is current user.
+ * @param {Object} [options] Options to pass to the API call.
+ * @param {Function} callback Callback function to perform once user information is retrieved.
  */
-define(['core', 'jquery'], function() {
-	
-	createNS('didgeridoo.api.user');
+User.get = function() {
+  var args = arguments,
+      user_id,
+      options,
+      callback;
 
-	/**
-	 * Returns user information.
-	 * @param {string} [userid] (Optional) The id of the user you want to retrieve information. Default: 0 (logged user).
-	 * @param {function} callback Callback function to perform once user information is retrieved.
-	 */
-	didgeridoo.api.user.get = function() {
+  assert(args.length > 0, 'Parameter callback is required');
 
-		var url,
-			cb,
-			userid;
+  if( args.length === 1 ) {
+    assert(is.function(args[0]), 'Parameter callback must be a function.');
+    user_id = BloksMonkey.data.get('bootstrap').user_id;
+    options = {};
+    callback = args[0];
+  } else if( args.length === 2 ) {
+    assert(is.string(args[0]) || is.json(args[0]), 'First parameter should be user_id or options.');
+    assert(is.function(args[1]), 'Parameter callback must be a function.');
 
-		if( arguments.length === 0 ) {
-			throw new didgeridoo.api.user.UserGetError('Too few parameters on <didgeridoo.api.user.get> call.');
-		} else if( arguments.length === 1 ) {
-			assert(typeof arguments[0] === 'function', 'Parameter callback must be a function.', didgeridoo.api.user.UserGetError);
+    if( is.string(args[0]) ) {
+      assert(validateUserId(args[0]), 'Invalid user_id parameter.');
+      user_id = args[0];
+      options = {};
+    } else {
+      user_id = BloksMonkey.data.get('bootstrap').user_id;
+      options = args[0];
+    }
 
-			userid = '0';
-			url = '/u/0'; // Zero belongs to the current user.
-			cb = arguments[0];
-		} else if( arguments.length === 2 ) {
-			assert(typeof arguments[0] === 'string', 'Parameter userid must be a string.', didgeridoo.api.user.UserGetError);
-			assert(arguments[0].trim().length > 0, 'Invalid userid parameter.', didgeridoo.api.user.UserGetError);
-			assert(typeof arguments[1] === 'function', 'Parameter callback must be a function.', didgeridoo.api.user.UserGetError);
-			userid = arguments[0];
-			url = '/u/' + userid;
-			cb = arguments[1];
-		} else {
-			throw new didgeridoo.api.user.UserGetError('Too much parameters on <didgeridoo.api.user.get> call.');
-		}
+    callback = args[1];
+  } else {
+    assert(is.string(args[0]), 'Parameter user_id should be a string.');
+    assert(validateUserId(args[0]), 'Invalid user_id parameter.');
+    assert(is.json(args[1]), 'Parameter options must be an object.');
+    assert(is.function(args[2]), 'Parameter callback must be a function.');
+    user_id = args[0];
+    options = args[1];
+    callback = args[2];
+  }
 
+  if( user_id === BloksMonkey.data.get('bootstrap').user_id && !options.force && UserStatic.current ) {
+    callback.call(this, null, User.getCurrent()); return;
+  }
 
-		$.ajax({
-			url: url,
-			type: 'GET',
-			data: {
-				format: 'json'
-			},
-			success: function(User) {
-				didgeridoo.api.user.currentUser = User;
-				cb.apply(this, [User]);
-			},
-			error: function() {
-				throw new didgeridoo.api.user.UserGetError('Couldn\'t get user with id "' + userid + '".');
-			}
-		});
+  options.query = options.query || {};
+  options.query.access_token = ls.get('oauth2_token');
 
-	};
+  $.ajax({
+    url: '/api/v1/users/' + user_id,
+    type: 'GET',
+    data: options.query,
+    success: function (user) {
+      UserStatic.current = new User.Model(user);
+      callback.call(this, null, UserStatic.current);
+      BloksMonkey.events.trigger('api.user.get', UserStatic.current);
+    },
+    error: function (err) {
+      err.message = 'Couldn\'t get user: ' + err.message;
+      callback.call(this, err, null);
+    }
+  });
+};
 
+/**
+ * Returns the current loaded user
+ *
+ * @returns {User} The current loaded user, or null if user has not been loaded yet.
+ */
+User.getCurrent = function () {
+  return UserStatic.current || null;
+};
 
-	/**
-     * Error while performing {@link didgeridoo.api.user.get} operation.
-     * @param {string} [message] Message to display.
-     */
-    didgeridoo.api.user.UserGetError = function(message) {
-        this.name = 'UserGetError';
-        this.message = typeof message !== 'undefined' ? this.name + ': ' + message : this.name + ' occurred!';
-    };
-    didgeridoo.api.user.UserGetError.prototype = new Error();
-    didgeridoo.api.user.UserGetError.prototype.constructor = didgeridoo.api.user.UserGetError;
-
-	return didgeridoo.api.user;
-
-});
+module.exports = User;

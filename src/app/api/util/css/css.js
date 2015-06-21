@@ -1,23 +1,25 @@
-"use strict";
+var Util = {};
 
-/**
- * CSS Helper API
- *
- * @module api/util/css/css
- */
-define(['core'], function() {
+Util.css = {};
 
-    createNS('didgeridoo.api.util.css');
+Util.css.load = function (cssFile) {
+  var link = document.createElement('link');
 
-    didgeridoo.api.util.css.load = function(cssFile) {
-        var link = document.createElement('link');
+  link.setAttribute('rel', 'stylesheet');
+  link.setAttribute('href', cssFile);
 
-        link.setAttribute('rel', 'stylesheet');
-        link.setAttribute('href', cssFile);
-        
-        document.querySelector('head').appendChild(link);
-    };
+  document.querySelector('head').appendChild(link);
+};
 
-    return didgeridoo.api.util.css;
+Util.html = {};
 
-});
+Util.html.import = function (htmlFile) {
+  var link = document.createElement('link');
+
+  link.setAttribute('rel', 'import');
+  link.setAttribute('href', htmlFile);
+
+  document.querySelector('head').appendChild(link);
+};
+
+module.exports = Util;

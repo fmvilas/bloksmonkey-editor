@@ -1,0 +1,221 @@
+// Text
+.text-color {
+  color: @text-color;
+}
+.text-color-subtle {
+  color: @text-color-subtle;
+}
+.text-color-highlight {
+  color: @text-color-highlight;
+}
+.text-color-selected {
+  color: @text-color-selected;
+}
+.text-color-info {
+  color: @text-color-info;
+}
+.text-color-success {
+  color: @text-color-success;
+}
+.text-color-warning {
+  color: @text-color-warning;
+}
+.text-color-error {
+  color: @text-color-error;
+}
+
+// Background Colors
+.background-color-info {
+  background-color: @background-color-info;
+}
+.background-color-success {
+  background-color: @background-color-success;
+}
+.background-color-warning {
+  background-color: @background-color-warning;
+}
+.background-color-error {
+  background-color: @background-color-error;
+}
+.background-color-subtle {
+  background-color: @background-color-subtle;
+}
+.background-color-highlight {
+  background-color: @background-color-highlight;
+}
+.background-color-selected {
+  background-color: @background-color-selected;
+}
+
+// Sidebar
+.sidebar {
+  background-color: @sidebar-background-color;
+}
+.sidebar-apps {
+  position: fixed;
+  background: darken(@nav-bg, 3%);
+  top: 0;
+  left: @sidebar-width;
+  width: @sidebar-app-panel-width;
+  z-index: 2001;
+  height: 100%;
+  overflow: auto;
+  -webkit-transition: all 0.2s;
+  -moz-transition: all 0.2s;
+  -o-transition: all 0.2s;
+  transition: all 0.2s;
+}
+.sidebar-app-panel {
+  padding: 0;
+  width: @sidebar-app-panel-width;
+}
+.sidebar-app-panel-header {
+  padding: @normal @normal @medium @normal;
+  background-color: @sidebar-app-panel-background-color;
+  border-color: @sidebar-app-panel-border-color;
+}
+.sidebar-app-panel-heading {
+  background-color: @sidebar-app-panel-heading-background-color;
+  font-size: @normal;
+  color: @sidebar-app-panel-heading-color;
+  margin: 0;
+  text-align: center;
+}
+.sidebar-app-panel-body {
+  padding: 0 @normal;
+  color: @sidebar-app-panel-body-color;
+  font-size: 13px;
+}
+.sidebar-app-panel-body-text {
+  color: @sidebar-app-panel-body-color;
+  font-size: 13px;
+}
+.sidebar-app-tab {
+  &:extend(.nav);
+  &:extend(.nav-tabs);
+  padding-left: 0;
+  margin-left: 0;
+  margin-bottom: 20px;
+  list-style: none;
+  border-bottom: none;
+
+  &:before {
+    display: table;
+    content: "";
+    line-height: 0;
+  }
+
+  &:after {
+    clear: both;
+    display: table;
+    content: "";
+    line-height: 0;
+  }
+
+  li {
+    float: left;
+
+    &.col-2 {
+      width: 50%;
+      text-align: center;
+    }
+
+    &.active a {
+      color: @sidebar-app-tab-selected-color;
+      border-bottom-color: @sidebar-app-tab-selected-border-color;
+    }
+
+    a {
+      display: block;
+      color: @sidebar-app-tab-color;
+      font-size: @medium-normal;
+      line-height: @normal;
+      padding: @small @medium;
+      border-bottom: @sidebar-app-tab-border-color 2px solid;
+    }
+  }
+}
+
+// Tabbed Navigation
+.nav.nav-tabs.ui-tab-nav {
+  /*display: block;
+  margin: 0;
+  padding: 5px 0 0 5px;
+  list-style-type : none;
+  overflow: hidden;*/
+  padding: 5px 0 0 5px;
+
+  & > li {
+    /*display: inline-block;
+    background-color: @gray;
+    margin-right: 5px;
+    padding: 0;
+    max-width: 300px;*/
+
+    &.active {
+
+      a {
+        background-color: white;
+        color: @primary;
+        border-bottom: white 1px solid;
+      }
+    }
+
+    a {
+      display: block;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      text-decoration: none;
+      color: @text-color;
+
+      i { margin: 0 5px 0 8px; }
+    }
+
+    a.icon-only {
+      padding: 10px 20px;
+
+      i { margin: 0 5px; }
+    }
+  }
+}
+
+//@overlay-background-color: #f4f4f4;
+//@overlay-border-color: @base-border-color;
+
+//@button-background-color: #ccc;
+//@button-background-color-hover: lighten(@button-background-color, 5%);
+//@button-background-color-selected: @button-background-color-hover;
+//@button-border-color: #aaa;
+
+// @tab-bar-background-color: #fff;
+// @tab-bar-border-color: darken(@tab-background-color-active, 10%);
+// @tab-background-color: #f4f4f4;
+// @tab-background-color-active: #fff;
+// @tab-border-color: @base-border-color;
+
+// @tree-view-background-color: @sidebar-background-color;
+// @tree-view-border-color: @sidebar-border-color;
+
+// @ui-site-color-1: @background-color-success; // green
+// @ui-site-color-2: @background-color-info; // blue
+// @ui-site-color-3: @background-color-warning; // orange
+// @ui-site-color-4: #db2ff4; // purple
+// @ui-site-color-5: #f5e11d; // yellow
+
+
+// Sizes
+
+@font-size: 13px;
+@input-font-size: 14px;
+
+@app-padding: @normal;
+@app-icon-margin: @small;
+@app-icon-size: 16px;
+
+//@tab-height: 30px;
+
+
+// Other
+
+@font-family: 'Lucida Grande', 'Segoe UI', Ubuntu, Cantarell, sans-serif;

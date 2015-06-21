@@ -9,6 +9,8 @@ var through = require('through2');
 var gutil = require('gulp-util');
 var notifier = require('node-notifier');
 var path = require('path');
+var walk = require('walkdir');
+var fs = require('fs');
 var ENV = process.env.ENV || 'development';
 
 gulp.task('webpack', function () {
@@ -23,9 +25,28 @@ gulp.task('static', function () {
     {src: 'src/index.html', dest: 'public/app/index.html'},
     {src: 'src/favicon.png', dest: 'public/app/favicon.png'},
     {src: 'src/icon_128.png', dest: 'public/app/icon_128.png'}
-    //{src: 'src/assets/**/*', dest: 'public/app/assets/'}
   ];
   return copy(paths);
+});
+
+gulp.task('apps', ['webpack'], function () {
+  walk("./apps", {
+    follow_symlinks: false,
+    no_recurse: true
+  }, function (path, stat) {
+    var json = require(path+'/package.json'),
+        version = json.version,
+        app_name = path.match(/\/([^\/]+)$/)[1],
+        dest_dir = './public/apps/'+app_name+'/'+version+'/';
+
+    return gulp.src('./apps/'+app_name+'/dist/**')
+        .pipe(gulp.dest(dest_dir))
+        .on('end', function() {
+          fs.writeFile(dest_dir+'config.json', JSON.stringify(json.bloksmonkey), function (err) {
+            if (err) throw err;
+          });
+        });
+  });
 });
 
 gulp.task('config', function () {
@@ -42,7 +63,7 @@ gulp.task('config', function () {
     .pipe(gulp.dest('./public/app/config/'));
 });
 
-gulp.task('build', ['static', 'config', 'webpack']);
+gulp.task('build', ['static', 'config', 'webpack', 'apps']);
 
 gulp.task('default', ['build'], function () {
   nodemon({

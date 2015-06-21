@@ -1,174 +1,232 @@
-"use strict";
+var BloksMonkey = require('../../core/core');
+var assert = require('assert');
+var $ = require('jquery');
+var is = require('is_js');
+var ls = require('local-storage');
+var _ = require('underscore');
+var Q = require('q');
+var UserCollection = require('../../collections/user');
+var Project = {};
+var ProjectStatic = {};
+
+var PROJECT_LIST = 'Project.list([options]): ';
+var PROJECT_GET = 'Project.get(options): ';
+var PROJECT_OPEN = 'Project.open(options): ';
+var PROJECT_MEMBERS = 'Project.members(options): ';
+var PROJECT_FILES_LIST = 'Project.files.list(options): ';
+var ERROR_LIST_OPTIONS = 'If specified, parameter options must be an object.';
+var ERROR_OPTIONS_REQUIRED = 'Parameter options is required and should be an object.';
+var ERROR_ID_SHOULD_BE_STRING = 'Parameter options.project_id should be a string.';
+var ERROR_PROJECT_ID = 'Invalid options.project_id parameter.';
+
+ProjectStatic.errors = {};
+ProjectStatic.errors.LIST_OPTIONS = ERROR_LIST_OPTIONS;
+ProjectStatic.errors.OPTIONS_REQUIRED = ERROR_OPTIONS_REQUIRED;
+ProjectStatic.errors.ID_SHOULD_BE_STRING = ERROR_ID_SHOULD_BE_STRING;
+
+function validateProjectId (pid) {
+  return !!pid.match(/^[a-z0-9]{24}$/);
+}
+
+Project.Model = require('../../models/project');
+Project.Collection = require('../../collections/project');
+Project.FileModel = require('../../models/file');
+Project.FileCollection = require('../../collections/file');
+
+Project.files = {};
 
 /**
- * Project API
+ * Returns a list of projects.
  *
- * @module api/project/project
+ * @param {Object} [options] Options to pass to the API call.
+ * @returns {Promise}
  */
-define(['core', 'API.Util'], function() {
-
-  createNS('didgeridoo.api.project');
-
-  /**
-   * Returns project information.
-   * @param {string} pid The id of the project you want to retrieve information.
-   * @param {function} callback Callback function to perform once project information is retrieved.
-   */
-  didgeridoo.api.project.get = function() {
-
-    var args = arguments,
-      url,
-      cb,
-      pid;
-
-    if( args.length < 2 ) {
-      throw new didgeridoo.api.project.ProjectOpenError('Too few parameters on <didgeridoo.api.project.get> call.');
-    } else if( args.length === 2 ) {
-      assert(typeof args[0] === 'string', 'Parameter pid must be a string.', didgeridoo.api.project.ProjectGetError);
-      assert(args[0].trim().length > 0, 'Invalid pid parameter.', didgeridoo.api.project.ProjectGetError);
-      assert(typeof args[1] === 'function', 'Parameter callback must be a function.', didgeridoo.api.project.ProjectGetError);
-      pid = args[0];
-      url = '/api/v1/projects/' + pid;
-      cb = args[1];
-    } else {
-      throw new didgeridoo.api.project.ProjectGetError('Too much parameters on <didgeridoo.api.project.get> call.');
-    }
-
-    $.ajax({
-      url: url,
-      type: 'GET',
-      crossDomain: true,
-      success: function(Project) {
-        cb.apply(this, [Project]);
-      },
-      error: function(err) {
-        throw new didgeridoo.api.project.ProjectGetError('Couldn\'t get project with id "' + pid + '".');
-      }
-    });
-
-  };
-
-
-  /**
-   * Returns an array of files for the given project.
-   * @param {string} pid The id of the project you want to retrieve the file array from.
-   * @param {function} callback Callback function to perform once file array is retrieved.
-   */
-  didgeridoo.api.project.getFiles = function() {
-
-    var args = arguments,
-      url,
-      query,
-      cb,
-      pid,
-      isObject = didgeridoo.api.util.isObject;
-
-    assert(typeof args[0] === 'string', 'Parameter pid must be a string.', didgeridoo.api.project.ProjectGetError);
-    assert(args[0].trim().length > 0, 'Invalid pid parameter.', didgeridoo.api.project.ProjectGetError);
-    pid = args[0];
-    url = '/api/v1/projects/' + pid + '/f';
-
-    if( args.length < 2 ) {
-      throw new didgeridoo.api.project.ProjectGetError('Too few parameters on <didgeridoo.api.project.getFiles> call.');
-    } else if( args.length === 2 ) {
-      assert(typeof args[1] === 'function', 'Parameter callback must be a function.', didgeridoo.api.project.ProjectGetError);
-
-      query = null;
-      cb = args[1];
-    } else if( args.length === 3 ) {
-      assert(isObject(args[1], true), 'Parameter query must be an object.', didgeridoo.api.project.ProjectGetError);
-      assert(typeof args[2] === 'function', 'Parameter callback must be a function.', didgeridoo.api.project.ProjectGetError);
-
-      query = args[1];
-      cb = args[2];
-    } else {
-      throw new didgeridoo.api.project.ProjectGetError('Too much parameters on <didgeridoo.api.project.getFiles> call.');
-    }
-
-    $.ajax({
-      url: url,
-      type: 'GET',
-      crossDomain: true,
-      data: {
-        format: 'json',
-        query: query
-      },
-      success: function(files) {
-        cb.apply(this, [files]);
-      },
-      error: function(err) {
-        throw new didgeridoo.api.project.ProjectGetError('Couldn\'t get project files.');
-      }
-    });
-
-  };
-
-
-
-  /**
-   * Open a project
-   * @param {string} pid The id of the project you want to open.
-   * @param {function} callback Callback function to perform once project is open.
-   */
-  didgeridoo.api.project.open = function() {
-    var args = arguments,
-      url,
-      cb,
-      pid;
-
-    if( args.length === 0 ) {
-      throw new didgeridoo.api.project.ProjectOpenError('Too few parameters on <didgeridoo.api.project.open> call.');
-    } else if( args.length === 1 ) {
-      assert(typeof args[0] === 'string', 'Parameter pid must be a string.', didgeridoo.api.project.ProjectOpenError);
-      assert(args[0].trim().length > 0, 'Invalid pid parameter.', didgeridoo.api.project.ProjectOpenError);
-      pid = args[0];
-      url = '/api/v1/projects/' + pid;
-    } else {
-      throw new didgeridoo.api.project.ProjectOpenError('Too much parameters on <didgeridoo.api.project.open> call.');
-    }
-
+Project.list = function (options) {
+  return Q.promise(function (resolve, reject) {
     try {
-      didgeridoo.api.project.get(pid, function(p) {
-        didgeridoo.api.project.currentProject = p;
-        didgeridoo.api.event.publish('didgeridoo.api.project.open', p);
-      });
-    } catch(e) {
-      throw new didgeridoo.api.project.ProjectOpenError('Unable to open project.');
+      assert(is.json(options) || is.undefined(options), PROJECT_LIST + ERROR_LIST_OPTIONS);
+
+      options = options || {};
+      options.query = options.query || {};
+      options.query.access_token = ls.get('oauth2_token');
+    } catch(err) {
+      reject({ error: err, options: options });
     }
-  };
+
+    $.ajax({
+      url: '/api/v1/projects',
+      type: 'GET',
+      data: options.query,
+      crossDomain: true
+    }).done(function (projects) {
+      var projectsCollection = new Project.Collection(projects);
+      resolve({ projects: projectsCollection, options: options });
+      BloksMonkey.events.trigger('api.project.list', { projects: projectsCollection, options: options });
+    }).fail(function (err) {
+      err.message = PROJECT_LIST + 'Couldn\'t retrieve project list: ' + err.message;
+      reject({ error: err, options: options });
+    });
+  });
+};
+
+/**
+ * Returns project information.
+ *
+ * @param {Object} options Options to pass to the API call.
+ * @param {String} options.project_id The id of the project you want to retrieve information.
+ * @returns {Promise}
+ */
+Project.get = function (options) {
+  return Q.promise(function (resolve, reject) {
+    try {
+      assert(is.json(options), PROJECT_GET + ERROR_OPTIONS_REQUIRED);
+      assert(is.string(options.project_id), PROJECT_GET + ERROR_ID_SHOULD_BE_STRING);
+      assert(validateProjectId(options.project_id), PROJECT_GET + ERROR_PROJECT_ID);
+
+      options.query = options.query || {};
+      options.query.access_token = ls.get('oauth2_token');
+    } catch(err) {
+      return reject({ error: err, options: options });
+    }
+
+    $.ajax({
+      url: '/api/v1/projects/' + options.project_id,
+      type: 'GET',
+      data: options.query,
+      crossDomain: true
+    }).done(function (project) {
+      var projectModel = new Project.Model(project);
+      resolve({ project: projectModel, options: options });
+      BloksMonkey.events.trigger('api.project.get', { project: projectModel, options: options });
+    }).fail(function (err) {
+      err.message = PROJECT_GET + 'Couldn\'t get members on project with id "' + options.project_id + '": ' + err.message;
+      reject({ error: err, options: options });
+    });
+  });
+};
+
+/**
+ * Returns project members.
+ *
+ * @param {Object} options Options to pass to the API call.
+ * @param {String} options.project_id The id of the project you want to retrieve information.
+ * @param {Boolean} [options.include_owner] Wether to include the owner of the project or not.
+ * @returns {Promise}
+ */
+Project.members = function (options) {
+  return Q.promise(function (resolve, reject) {
+    try {
+      assert(is.json(options), PROJECT_MEMBERS + ERROR_OPTIONS_REQUIRED);
+      assert(is.string(options.project_id), PROJECT_MEMBERS + ERROR_ID_SHOULD_BE_STRING);
+      assert(validateProjectId(options.project_id), PROJECT_MEMBERS + ERROR_PROJECT_ID);
+
+      options.query = options.query || {};
+      options.query.access_token = ls.get('oauth2_token');
+    } catch(err) {
+      return reject({ error: err, options: options });
+    }
+
+    $.ajax({
+      url: '/api/v1/projects/' + options.project_id + '/members',
+      type: 'GET',
+      data: options.query,
+      crossDomain: true
+    }).done(function (members) {
+      var userCollection = new UserCollection(members);
+      resolve({ members: userCollection, options: options });
+      BloksMonkey.events.trigger('api.project.member.list', { members: userCollection, options: options });
+    }).fail(function (err) {
+      err.message = PROJECT_MEMBERS + 'Couldn\'t get members on project with id "' + options.project_id + '": ' + err.message;
+      reject({ error: err, options: options });
+    });
+  });
+};
 
 
-  /**
-   * Close current project.
-   */
-  didgeridoo.api.project.close = function() {
-    didgeridoo.api.project.currentProject = null;
-    didgeridoo.api.event.publish('didgeridoo.api.project.close');
-  };
+/**
+ * Returns an collection of files for the given project.
+ *
+ * @param {Object} options Options to pass to the API call.
+ * @param {String} options.project_id The id of the project you want to retrieve information.
+ * @returns {Promise}
+ */
+Project.files.list = function (options) {
+  return Q.promise(function (resolve, reject) {
+    try {
+      assert(is.json(options), PROJECT_FILES_LIST + ERROR_OPTIONS_REQUIRED);
+      assert(is.string(options.project_id), PROJECT_FILES_LIST + ERROR_ID_SHOULD_BE_STRING);
+      assert(validateProjectId(options.project_id), PROJECT_FILES_LIST + ERROR_PROJECT_ID);
+
+      options.query = options.query || {};
+      options.query.access_token = ls.get('oauth2_token');
+      options.query.project_id = options.project_id;
+    } catch(err) {
+      return reject({ error: err, options: options });
+    }
+
+    $.ajax({
+      url: '/api/v1/files',
+      type: 'GET',
+      crossDomain: true,
+      data: options.query
+    }).done(function (files) {
+      var filesCollection = new Project.FileCollection(files);
+      resolve({ files: filesCollection, options: options });
+      BloksMonkey.events.trigger('api.project.files.list', { files: filesCollection, options: options });
+    }).fail(function (err) {
+      err.message = PROJECT_FILES_LIST + 'Couldn\'t get files on project with id "' + options.project_id + '": ' + err.message;
+      reject({ error: err, options: options });
+    });
+  });
+};
 
 
-  /**
-     * Error while performing {@link didgeridoo.api.project.get} operation.
-     * @param {string} [message] Message to display.
-     */
-    didgeridoo.api.project.ProjectGetError = function(message) {
-        this.name = 'ProjectGetError';
-        this.message = typeof message !== 'undefined' ? this.name + ': ' + message : this.name + ' occurred!';
-    };
-    didgeridoo.api.project.ProjectGetError.prototype = new Error();
-    didgeridoo.api.project.ProjectGetError.prototype.constructor = didgeridoo.api.project.ProjectGetError;
 
-    /**
-     * Error while performing {@link didgeridoo.api.project.open} operation.
-     * @param {string} [message] Message to display.
-     */
-    didgeridoo.api.project.ProjectOpenError = function(message) {
-        this.name = 'ProjectOpenError';
-        this.message = typeof message !== 'undefined' ? this.name + ': ' + message : this.name + ' occurred!';
-    };
-    didgeridoo.api.project.ProjectOpenError.prototype = new Error();
-    didgeridoo.api.project.ProjectOpenError.prototype.constructor = didgeridoo.api.project.ProjectOpenError;
+/**
+ * Open a project.
+ *
+ * @param {Object} options Options to pass to the API call.
+ * @param {String} options.project_id The id of the project you want to retrieve information.
+ * @returns {Promise}
+ */
+Project.open = function (options) {
+  return Q.promise(function (resolve, reject) {
+    try {
+      assert(is.json(options), PROJECT_OPEN + ERROR_OPTIONS_REQUIRED);
+      assert(is.string(options.project_id), PROJECT_OPEN + ERROR_ID_SHOULD_BE_STRING);
+      assert(validateProjectId(options.project_id), PROJECT_OPEN + ERROR_PROJECT_ID);
+    } catch(err) {
+      return reject({ error: err, options: options });
+    }
 
-  return didgeridoo.api.project;
+    Project.get({ project_id: options.project_id })
+    .done(function (data) {
+      ProjectStatic.current = data.project;
+      resolve({ project: ProjectStatic.current, options: options });
+      BloksMonkey.events.trigger('api.project.open', { project: ProjectStatic.current, options: options });
+    })
+    .fail(function (err) {
+      err.message = PROJECT_OPEN + 'Unable to open project: ' + err.message;
+      reject({ error: err, options: options });
+    });
+  });
+};
 
-});
+/**
+ * Returns the current open project
+ *
+ * @returns {Project} The current open project.
+ */
+Project.getCurrent = function () {
+  return ProjectStatic.current;
+};
+
+/**
+ * Close current project.
+ */
+Project.close = function () {
+  ProjectStatic.current = null;
+  BloksMonkey.event.trigger('api.project.close');
+};
+
+module.exports = Project;

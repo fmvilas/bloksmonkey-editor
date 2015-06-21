@@ -6,3 +6,5 @@ public/node_modules/*
 public/app/components/*
 dist
 build
+apps
+public/apps
